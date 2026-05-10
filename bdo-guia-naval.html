@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BDO — Guia Naval</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #7a5e28;
+    --sea: #0d2a3a;
+    --sea-mid: #12384f;
+    --sea-light: #1a4d6b;
+    --sea-surface: #0a1f2e;
+    --foam: #e8f4f8;
+    --text: #d4c9b0;
+    --text-bright: #f0e8d0;
+    --text-dim: #7a8a90;
+    --danger: #c0392b;
+    --success: #1a7a4a;
+    --accent: #2e7da8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: var(--sea-surface);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── WAVES BG ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 80%, rgba(13,42,58,0.9) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(18,56,79,0.7) 0%, transparent 60%),
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 2px,
+        rgba(201,168,76,0.015) 2px,
+        rgba(201,168,76,0.015) 4px
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: linear-gradient(180deg, #0a1a26 0%, #0d2234 50%, #0a1a26 100%);
+    border-right: 1px solid rgba(201,168,76,0.25);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    text-align: center;
+  }
+
+  .sidebar-header .compass {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 8px;
+    animation: spin-slow 20s linear infinite;
+  }
+
+  @keyframes spin-slow { to { transform: rotate(360deg); } }
+
+  .sidebar-header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    line-height: 1.4;
+  }
+
+  .sidebar-header p {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-section {
+    padding: 16px 12px 8px;
+  }
+
+  .nav-section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    padding: 0 8px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: 'Crimson Pro', serif;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .nav-btn:hover {
+    background: rgba(201,168,76,0.08);
+    color: var(--text);
+  }
+
+  .nav-btn.active {
+    background: rgba(201,168,76,0.12);
+    color: var(--gold-light);
+  }
+
+  .nav-btn.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; bottom: 20%;
+    width: 3px;
+    background: var(--gold);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .nav-btn .icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px;
+    border-top: 1px solid rgba(201,168,76,0.15);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: 260px;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  .page { display: none; padding: 40px 48px 60px; animation: fadein 0.35s ease; }
+  .page.active { display: block; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    margin-bottom: 36px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .page-header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .page-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--gold-light);
+    line-height: 1.2;
+  }
+
+  .page-header p {
+    margin-top: 10px;
+    font-size: 16px;
+    color: var(--text-dim);
+    font-style: italic;
+    max-width: 600px;
+  }
+
+  /* ── SECTION LABEL ── */
+  .sec-label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin: 32px 0 12px;
+  }
+
+  /* ── CARDS GRID ── */
+  .grid { display: grid; gap: 14px; }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+  .card {
+    background: linear-gradient(135deg, rgba(18,56,79,0.6) 0%, rgba(13,42,58,0.8) 100%);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 10px;
+    padding: 18px 20px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .card:hover { border-color: rgba(201,168,76,0.45); transform: translateY(-2px); }
+  .card.featured { border-color: rgba(201,168,76,0.55); }
+  .card.featured-blue { border-color: rgba(46,125,168,0.7); }
+
+  .card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gold-light);
+    margin-bottom: 3px;
+  }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-bottom: 12px;
+  }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
+  }
+  .b-gold { background: rgba(201,168,76,0.2); color: var(--gold-light); border: 1px solid rgba(201,168,76,0.35); }
+  .b-blue { background: rgba(46,125,168,0.2); color: #7ec8e3; border: 1px solid rgba(46,125,168,0.4); }
+  .b-green { background: rgba(26,122,74,0.2); color: #6ecf9e; border: 1px solid rgba(26,122,74,0.4); }
+  .b-red { background: rgba(192,57,43,0.2); color: #e07060; border: 1px solid rgba(192,57,43,0.4); }
+  .b-purple { background: rgba(120,80,180,0.2); color: #c0a0f0; border: 1px solid rgba(120,80,180,0.4); }
+  .b-gray { background: rgba(80,90,100,0.3); color: #a0b0b8; border: 1px solid rgba(80,90,100,0.4); }
+
+  /* ── STAT ROWS ── */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(201,168,76,0.08);
+    font-size: 13px;
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .sl { color: var(--text-dim); }
+  .sv { font-weight: 600; color: var(--text-bright); }
+  .sv.hi { color: #6ecf9e; }
+  .sv.lo { color: #e07060; }
+  .sv.mid { color: var(--gold-light); }
+
+  /* ── BARRAS ── */
+  .bar-group { margin: 6px 0; }
+  .bar-label-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: var(--text-dim); }
+  .bar-track { background: rgba(255,255,255,0.06); border-radius: 3px; height: 7px; overflow: hidden; }
+  .bar-fill { height: 7px; border-radius: 3px; transition: width 0.6s ease; }
+  .bar-gold { background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+  .bar-blue { background: linear-gradient(90deg, #1a4d6b, #2e7da8); }
+  .bar-green { background: linear-gradient(90deg, #0d4a2a, #1a7a4a); }
+  .bar-amber { background: linear-gradient(90deg, #7a5e28, #c9a84c); }
+
+  /* ── TABELA EVOLUTIVA ── */
+  .evol-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .evol-table th {
+    background: rgba(201,168,76,0.1);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(201,168,76,0.25);
+  }
+  .evol-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(201,168,76,0.08);
+    color: var(--text);
+    vertical-align: top;
+  }
+  .evol-table tr:last-child td { border-bottom: none; }
+  .evol-table tr:hover td { background: rgba(201,168,76,0.04); }
+
+  /* ── PILL TAGS ── */
+  .pill {
+    display: inline-block;
+    background: rgba(46,125,168,0.18);
+    border: 1px solid rgba(46,125,168,0.3);
+    border-radius: 20px;
+    font-size: 11px;
+    padding: 2px 9px;
+    color: #7ec8e3;
+    margin: 2px;
+  }
+
+  /* ── TIP BOX ── */
+  .tip-box {
+    background: rgba(201,168,76,0.06);
+    border-left: 3px solid var(--gold-dim);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-top: 12px;
+  }
+  .tip-box strong { color: var(--text-bright); }
+  .tip-box.green { border-color: #1a7a4a; }
+  .tip-box.blue { border-color: #2e7da8; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(201,168,76,0.12);
+    margin: 28px 0;
+  }
+
+  /* ── ATRIBUTO MAP ── */
+  .attr-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .attr-card {
+    background: rgba(10,26,38,0.6);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+
+  .attr-card h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .attr-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 3px 0;
+    color: var(--text-dim);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .attr-row:last-child { border-bottom: none; }
+  .attr-row span:last-child { color: #6ecf9e; font-weight: 600; }
+
+  /* ── SLOT INFO ── */
+  .slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .slot-item {
+    background: rgba(10,26,38,0.5);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .slot-item strong { color: var(--gold-light); display: block; font-size: 13px; margin-bottom: 2px; }
+
+  /* ── SEARCH BAR ── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 24px;
+    max-width: 400px;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: rgba(10,26,38,0.7);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 8px;
+    padding: 10px 16px 10px 38px;
+    color: var(--text-bright);
+    font-family: 'Crimson Pro', serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: rgba(201,168,76,0.55); }
+  .search-wrap input::placeholder { color: var(--text-dim); }
+  .search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 16px;
+  }
+
+  /* ── MOBILE ── */
+  .mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 12px; left: 12px;
+    z-index: 200;
+    background: var(--sea-mid);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--gold);
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .page { padding: 20px 20px 40px; }
+    .mobile-toggle { display: block; }
+    .page-header h2 { font-size: 22px; }
+  }
+
+  /* ── SCROLL ── */
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <span class="compass">⚓</span>
+    <h1>BDO<br>GUIA NAVAL</h1>
+    <p>Black Desert Online</p>
+    <div style="margin-top:14px; padding-top:12px; border-top:1px solid rgba(201,168,76,0.25);">
+      <div style="font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:4px;">Criado por</div>
+      <div style="font-family:'Cinzel',serif; font-size:18px; font-weight:700; color:var(--gold-light); letter-spacing:0.12em; text-shadow: 0 0 18px rgba(201,168,76,0.4);">Elezar</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Navios</div>
+    <button class="nav-btn active" onclick="navigate('navios')">
+      <span class="icon">⛵</span> Comparativo de Navios
+    </button>
+    <button class="nav-btn" onclick="navigate('carracas')">
+      <span class="icon">🚢</span> Carracas
+    </button>
+    <button class="nav-btn" onclick="navigate('panokseon')">
+      <span class="icon">🛡</span> Panokseon
+    </button>
+    <button class="nav-btn" onclick="navigate('galeao')">
+      <span class="icon">⭐</span> Galeão de Epheria
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Tripulação</div>
+    <button class="nav-btn" onclick="navigate('marinheiros')">
+      <span class="icon">👥</span> Marinheiros
+    </button>
+    <button class="nav-btn" onclick="navigate('vice')">
+      <span class="icon">🧭</span> Vice Capitães
+    </button>
+    <button class="nav-btn" onclick="navigate('evolucao')">
+      <span class="icon">📈</span> Evolução & Habilidades
+    </button>
+    <button class="nav-btn" onclick="navigate('manutencao')">
+      <span class="icon">🍞</span> Manutenção
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Referência</div>
+    <button class="nav-btn" onclick="navigate('atributos')">
+      <span class="icon">📊</span> Atributos × Efeitos
+    </button>
+    <button class="nav-btn" onclick="navigate('slots')">
+      <span class="icon">🗂</span> Slots de Marinheiro
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Comunidade</div>
+    <button class="nav-btn" onclick="navigate('agradecimentos')">
+      <span class="icon">🏅</span> Agradecimentos
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    Guia baseado em fontes<br>oficiais e comunidade BDO
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- ══════════════════════════════ NAVIOS ══ -->
+  <div id="page-navios" class="page active">
+    <div class="page-header">
+      <div class="eyebrow">⛵ Visão Geral</div>
+      <h2>Comparativo de Navios</h2>
+      <p>Todos os navios de alto nível — força de fogo, velocidade e utilidade.</p>
+    </div>
+
+    <p class="sec-label">Poder de Fogo — Canhões</p>
+    <div style="max-width:600px;">
+      <div class="bar-group">
+        <div class="bar-label-row"><span>Carraca Bravura — recarga 11s (mais rápida)</span><span>★★★★☆</span></div>
+        <div class="bar-track"><div class="bar-fill bar-blue" style="width:80%"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-label-row"><span>Panokseon — 9 canhões/lado</span><span>★★★★☆</span></div>
+        <div class="bar-track"><div class="bar-fill bar-green" style="width:78%"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-label-row"><span>Galeão de Epheria — stats base superiores</span><span>★★★★☆</span></div>
+        <div class="bar-track"><div class="bar-fill bar-amber" style="width:75%"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-label-row"><span>Carracas Emergência / Equilíbrio / Gradual</span><span>★★★☆☆</span></div>
+        <div class="bar-track"><div class="bar-fill bar-gold" style="width:58%"></div></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <p class="sec-label">Resumo rápido por finalidade</p>
+    <div class="grid grid-3">
+
+      <div class="card featured">
+        <span class="badge b-red">Combate</span>
+        <div class="card-title">Carraca Bravura</div>
+        <div class="card-sub">Melhor DPS de Carraca</div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv">6</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv hi">11s ⭐ mais rápida</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv">110%</span></div>
+        <div class="stat-row"><span class="sl">Peso limite</span><span class="sv mid">Padrão</span></div>
+        <div class="stat-row"><span class="sl">Indicada para</span><span class="sv hi">Caça a Monstros / PvP</span></div>
+      </div>
+
+      <div class="card">
+        <span class="badge b-blue">Velocidade</span>
+        <div class="card-title">Carraca Emergência</div>
+        <div class="card-sub">A mais rápida de todas</div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv">6</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv mid">~12s</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv hi">115% ⭐ mais rápida</span></div>
+        <div class="stat-row"><span class="sl">Peso limite</span><span class="sv mid">Padrão</span></div>
+        <div class="stat-row"><span class="sl">Indicada para</span><span class="sv hi">Deslocamento rápido</span></div>
+      </div>
+
+      <div class="card">
+        <span class="badge b-green">Permuta</span>
+        <div class="card-title">Carraca Gradual</div>
+        <div class="card-sub">Ideal para comércio</div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv lo">5</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv lo">~13s</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv">110%</span></div>
+        <div class="stat-row"><span class="sl">Peso limite</span><span class="sv hi">Alto ⭐ maior carga</span></div>
+        <div class="stat-row"><span class="sl">Indicada para</span><span class="sv hi">Permuta / comércio</span></div>
+      </div>
+
+      <div class="card">
+        <span class="badge b-gray">Equilibrada</span>
+        <div class="card-title">Carraca Equilíbrio</div>
+        <div class="card-sub">Stats balanceados</div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv lo">5</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv lo">~13s</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv">110%</span></div>
+        <div class="stat-row"><span class="sl">Peso limite</span><span class="sv mid">Padrão</span></div>
+        <div class="stat-row"><span class="sl">Indicada para</span><span class="sv lo">Não recomendada</span></div>
+      </div>
+
+      <div class="card featured-blue">
+        <span class="badge b-blue">Combate + Tripulação</span>
+        <div class="card-title">Panokseon</div>
+        <div class="card-sub">150 cabines, 9 canhões/lado</div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv hi">9 ⭐ mais canhões</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv mid">13s</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv lo">105% — mais lento</span></div>
+        <div class="stat-row"><span class="sl">Peso limite</span><span class="sv mid">12.500 LT</span></div>
+        <div class="stat-row"><span class="sl">Indicada para</span><span class="sv hi">Combate em grupo</span></div>
+      </div>
+
+      <div class="card">
+        <span class="badge b-gold">Temporário 7 dias</span>
+        <div class="card-title">Galeão de Epheria</div>
+        <div class="card-sub">Via Estrela de Epheria</div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv mid">Visualmente menos</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv mid">Igual à Carraca</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv hi">⭐ Superior a tudo</span></div>
+        <div class="stat-row"><span class="sl">Peso limite</span><span class="sv hi">⭐ Superior a tudo</span></div>
+        <div class="stat-row"><span class="sl">Indicada para</span><span class="sv mid">Ocasiões especiais</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ CARRACAS ══ -->
+  <div id="page-carracas" class="page">
+    <div class="page-header">
+      <div class="eyebrow">🚢 Navios T3</div>
+      <h2>Carracas de Epheria</h2>
+      <p>Os melhores navios craftáveis do jogo. Escolha conforme seu estilo de jogo.</p>
+    </div>
+    <div class="grid grid-2">
+      <div class="card featured">
+        <span class="badge b-red">Combate — Recomendada</span>
+        <div class="card-title">Carraca Bravura</div>
+        <div class="card-sub">Epheria Carrack: Valor · via Galleass</div>
+        <div class="stat-row"><span class="sl">PV</span><span class="sv">1.500.000</span></div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv hi">6</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv hi">11s — mais rápida</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv">110%</span></div>
+        <div class="stat-row"><span class="sl">Cabines</span><span class="sv lo">20 (100 com upgrades)</span></div>
+        <div class="stat-row"><span class="sl">Abalroagem</span><span class="sv mid">Média</span></div>
+        <div class="stat-row"><span class="sl">Equipamento</span><span class="sv">Toro / Chiro</span></div>
+        <div class="stat-row"><span class="sl">Custo reparo</span><span class="sv">3M prata / 10%</span></div>
+        <div class="tip-box green" style="margin-top:12px;font-size:13px;">Melhor escolha para caça a monstros marinhos solo.</div>
+      </div>
+      <div class="card">
+        <span class="badge b-blue">Velocidade</span>
+        <div class="card-title">Carraca Emergência</div>
+        <div class="card-sub">Epheria Carrack: Volante · via Galleass</div>
+        <div class="stat-row"><span class="sl">PV</span><span class="sv">1.500.000</span></div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv">6</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv mid">~12s</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv hi">115% — mais rápida</span></div>
+        <div class="stat-row"><span class="sl">Cabines</span><span class="sv lo">20 (100 com upgrades)</span></div>
+        <div class="stat-row"><span class="sl">Abalroagem</span><span class="sv mid">Média</span></div>
+        <div class="stat-row"><span class="sl">Equipamento</span><span class="sv">Toro / Chiro</span></div>
+        <div class="stat-row"><span class="sl">Custo reparo</span><span class="sv">3M prata / 10%</span></div>
+      </div>
+      <div class="card">
+        <span class="badge b-green">Escambo — Recomendada</span>
+        <div class="card-title">Carraca Gradual</div>
+        <div class="card-sub">Epheria Carrack: Advance · via Caravel</div>
+        <div class="stat-row"><span class="sl">PV</span><span class="sv">1.500.000</span></div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv lo">5</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv lo">~13s</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv">110%</span></div>
+        <div class="stat-row"><span class="sl">Peso limite</span><span class="sv hi">Alto — melhor para carga</span></div>
+        <div class="stat-row"><span class="sl">Inventário</span><span class="sv hi">Mais espaços</span></div>
+        <div class="stat-row"><span class="sl">Equipamento</span><span class="sv">Toro / Chiro</span></div>
+        <div class="tip-box green" style="margin-top:12px;font-size:13px;">Melhor para rotas de escambo e transporte de mercadorias.</div>
+      </div>
+      <div class="card">
+        <span class="badge b-gray">Equilibrada</span>
+        <div class="card-title">Carraca Equilíbrio</div>
+        <div class="card-sub">Epheria Carrack: Balance · via Caravel</div>
+        <div class="stat-row"><span class="sl">PV</span><span class="sv">1.500.000</span></div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv lo">5</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv lo">~13s</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv">110%</span></div>
+        <div class="stat-row"><span class="sl">Característica</span><span class="sv mid">Stats balanceados</span></div>
+        <div class="stat-row"><span class="sl">Equipamento</span><span class="sv">Toro / Chiro</span></div>
+        <div class="tip-box" style="margin-top:12px;font-size:13px;"><strong>Não recomendada</strong> — considerada "coringa sem especialidade". Prefira Gradual para escambo.</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <p class="sec-label">Rota de upgrade</p>
+    <div style="font-size:14px; color:var(--text-dim); line-height:2.2; background:rgba(10,26,38,0.5); border-radius:8px; padding:16px 20px; border:1px solid rgba(201,168,76,0.12);">
+      <span style="color:var(--text-dim)">Barco Bartali</span>
+      <span style="color:var(--gold-dim)"> → </span>
+      <span style="color:var(--text)">Veleiro / Fragata de Epheria</span>
+      <span style="color:var(--gold-dim)"> → </span>
+      <span style="color:var(--text)">Caravela / Galleass</span>
+      <span style="color:var(--gold-dim)"> → </span>
+      <span style="color:var(--gold-light)">Carraca</span>
+      <br>
+      <span style="font-size:12px; color:var(--text-dim)">Veleiro → Caravel → </span><span style="font-size:12px; color:#6ecf9e">Bravura / Equilíbrio</span>
+      <span style="font-size:12px; color:var(--text-dim)"> · Fragata → Galleass → </span><span style="font-size:12px; color:#6ecf9e">Gradual / Emergência</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ PANOKSEON ══ -->
+  <div id="page-panokseon" class="page">
+    <div class="page-header">
+      <div class="eyebrow">🛡 Terra da Luz da Manhã</div>
+      <h2>Panokseon</h2>
+      <p>Navio guerreiro oriental com a maior capacidade de tripulação e alto poder de fogo.</p>
+    </div>
+    <div class="grid grid-2">
+      <div class="card featured-blue">
+        <span class="badge b-blue">Stats Base</span>
+        <div class="card-title">Atributos do Panokseon</div>
+        <div class="stat-row"><span class="sl">PV</span><span class="sv hi">2.000.000</span></div>
+        <div class="stat-row"><span class="sl">Rações</span><span class="sv hi">1.300.000</span></div>
+        <div class="stat-row"><span class="sl">Inventário</span><span class="sv">20 espaços</span></div>
+        <div class="stat-row"><span class="sl">Peso limite</span><span class="sv">12.500 LT</span></div>
+        <div class="stat-row"><span class="sl">Canhões/lado</span><span class="sv hi">9</span></div>
+        <div class="stat-row"><span class="sl">Cap. de balas</span><span class="sv">2.000</span></div>
+        <div class="stat-row"><span class="sl">Recarga</span><span class="sv mid">13s</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv lo">105%</span></div>
+        <div class="stat-row"><span class="sl">Aceleração</span><span class="sv lo">100%</span></div>
+        <div class="stat-row"><span class="sl">Curva</span><span class="sv">110%</span></div>
+        <div class="stat-row"><span class="sl">Freio</span><span class="sv">115%</span></div>
+        <div class="stat-row"><span class="sl">Cabines</span><span class="sv hi">150</span></div>
+        <div class="stat-row"><span class="sl">Custo reparo</span><span class="sv lo">3M prata / 10%</span></div>
+        <div class="stat-row"><span class="sl">Equipamento</span><span class="sv">Haemo / Byukgye</span></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px;">
+          <span class="badge b-green">Pontos fortes</span>
+          <div class="stat-row"><span class="sl">Maior HP</span><span class="sv hi">2.000.000 PV</span></div>
+          <div class="stat-row"><span class="sl">Canhões</span><span class="sv hi">9/lado — mais que a Carraca</span></div>
+          <div class="stat-row"><span class="sl">Abalroagem</span><span class="sv hi">Superior à Carraca</span></div>
+          <div class="stat-row"><span class="sl">Cabines</span><span class="sv hi">150 — enorme tripulação</span></div>
+          <div class="stat-row"><span class="sl">Habilidade Unbeaten</span><span class="sv hi">Chamas em área sem girar</span></div>
+        </div>
+        <div class="card" style="margin-bottom:12px;">
+          <span class="badge b-red">Pontos fracos</span>
+          <div class="stat-row"><span class="sl">Velocidade</span><span class="sv lo">105% — o mais lento</span></div>
+          <div class="stat-row"><span class="sl">Aceleração</span><span class="sv lo">100% — abaixo das Carracas</span></div>
+          <div class="stat-row"><span class="sl">Peso c/ 15 marinheiros</span><span class="sv lo">~9.500 LT disponíveis</span></div>
+          <div class="stat-row"><span class="sl">Craft</span><span class="sv lo">15 missões semanais</span></div>
+        </div>
+        <div class="tip-box blue">
+          <strong>Dica:</strong> O Panokseon brilha em grupo — a enorme tripulação compensa a baixa velocidade com muito mais bônus de marinheiros e poder de fogo total.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ GALEÃO ══ -->
+  <div id="page-galeao" class="page">
+    <div class="page-header">
+      <div class="eyebrow">⭐ Estrela de Epheria</div>
+      <h2>Galeão de Epheria</h2>
+      <p>O maior navio do jogo — temporário, raro e exclusivo.</p>
+    </div>
+    <div class="grid grid-2">
+      <div class="card featured" style="border-color:rgba(201,168,76,0.6);">
+        <span class="badge b-gold">Temporário — 7 dias</span>
+        <div class="card-title">Atributos do Galeão</div>
+        <div class="stat-row"><span class="sl">PV base</span><span class="sv hi">Superior a todas as Carracas</span></div>
+        <div class="stat-row"><span class="sl">Velocidade</span><span class="sv hi">Superior às Carracas</span></div>
+        <div class="stat-row"><span class="sl">Cadência de fogo</span><span class="sv mid">Igual à Carraca</span></div>
+        <div class="stat-row"><span class="sl">Alcance dos canhões</span><span class="sv mid">Igual à Carraca</span></div>
+        <div class="stat-row"><span class="sl">Equipamento</span><span class="sv lo">Não equipa itens</span></div>
+        <div class="stat-row"><span class="sl">Bônus de marinheiros</span><span class="sv lo">Não recebe</span></div>
+        <div class="stat-row"><span class="sl">Custo reparo</span><span class="sv lo">10M prata / 10%</span></div>
+        <div class="stat-row"><span class="sl">Registro</span><span class="sv">Qualquer Gerente de Ancoradouro</span></div>
+        <div class="stat-row"><span class="sl">Dano relato</span><span class="sv hi">1 tiro = 80% PV de Ocean Stalker</span></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px;">
+          <span class="badge b-gold">Como obter — Estrela de Epheria</span>
+          <div class="stat-row"><span class="sl">Escambo Especial</span><span class="sv mid">Baixa chance de aparecer</span></div>
+          <div class="stat-row"><span class="sl">Guerra de Conquista</span><span class="sv mid">Lord presenteia membro de guilda</span></div>
+          <div class="stat-row"><span class="sl">Como usar</span><span class="sv">Leve a Philaberto Falasi</span></div>
+          <div class="stat-row"><span class="sl">Resultado</span><span class="sv">Licença do Galeão + Título Capitão Epheria</span></div>
+          <div class="stat-row"><span class="sl">Validade do título</span><span class="sv lo">7 dias</span></div>
+        </div>
+        <div class="tip-box">
+          <strong>Atenção:</strong> Sem equipamento e sem bônus de marinheiros, o poder de fogo real depende apenas dos stats base. Para uso prolongado, a Carraca Bravura bem equipada pode superar o Galeão na prática.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ MARINHEIROS ══ -->
+  <div id="page-marinheiros" class="page">
+    <div class="page-header">
+      <div class="eyebrow">👥 Tripulação</div>
+      <h2>Marinheiros</h2>
+      <p>NPCs que aumentam os stats do navio e exploram ilhas durante o escambo.</p>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="sailor-search" placeholder="Buscar marinheiro..." oninput="filterSailors(this.value)">
+    </div>
+
+    <div class="grid grid-3" id="sailor-cards">
+      <div class="card featured" data-tags="inocente goblin velocidade escambo velia epheria">
+        <span class="badge b-green">Melhor para escambo</span>
+        <div class="card-title">Inocente</div>
+        <div class="card-sub">Goblin · Velia / Porto Epheria</div>
+        <div class="stat-row"><span class="sl">Raça</span><span class="sv">Goblin</span></div>
+        <div class="stat-row"><span class="sl">Peso</span><span class="sv hi">Baixo (~150 LT)</span></div>
+        <div class="stat-row"><span class="sl">Vel. inicial</span><span class="sv mid">Moderada</span></div>
+        <div class="stat-row"><span class="sl">Crescimento</span><span class="sv hi">Maior de todos</span></div>
+        <div class="stat-row"><span class="sl">Foco stat</span><span class="sv hi">Velocidade / Aceleração</span></div>
+        <div class="stat-row"><span class="sl">Custo contrato</span><span class="sv">3M de prata</span></div>
+      </div>
+
+      <div class="card" data-tags="ambicioso goblin velocidade escambo velia epheria">
+        <span class="badge b-gold">Bom início</span>
+        <div class="card-title">Ambicioso</div>
+        <div class="card-sub">Goblin · Velia / Porto Epheria</div>
+        <div class="stat-row"><span class="sl">Raça</span><span class="sv">Goblin</span></div>
+        <div class="stat-row"><span class="sl">Peso</span><span class="sv hi">Baixo (~150 LT)</span></div>
+        <div class="stat-row"><span class="sl">Vel. inicial</span><span class="sv hi">Alta — melhor início</span></div>
+        <div class="stat-row"><span class="sl">Crescimento</span><span class="sv mid">Moderado</span></div>
+        <div class="stat-row"><span class="sl">Foco stat</span><span class="sv hi">Velocidade / Aceleração</span></div>
+        <div class="stat-row"><span class="sl">Custo contrato</span><span class="sv">3M de prata</span></div>
+      </div>
+
+      <div class="card" data-tags="nascido mar gigante iliya velocidade">
+        <span class="badge b-blue">Alta vel. inicial</span>
+        <div class="card-title">Nascido no Mar</div>
+        <div class="card-sub">Gigante · Ilha Iliya</div>
+        <div class="stat-row"><span class="sl">Raça</span><span class="sv">Gigante</span></div>
+        <div class="stat-row"><span class="sl">Peso</span><span class="sv lo">Alto (~500 LT)</span></div>
+        <div class="stat-row"><span class="sl">Vel. inicial</span><span class="sv hi">Mais alta de todos</span></div>
+        <div class="stat-row"><span class="sl">Crescimento</span><span class="sv mid">Moderado</span></div>
+        <div class="stat-row"><span class="sl">Foco stat</span><span class="sv">Velocidade / Aceleração</span></div>
+        <div class="stat-row"><span class="sl">Custo contrato</span><span class="sv">3M de prata</span></div>
+      </div>
+
+      <div class="card featured-blue" data-tags="agil perspicaz combate canhao foco recarga">
+        <span class="badge b-red">Combate — Canhão</span>
+        <div class="card-title">Ágil / Perspicaz</div>
+        <div class="card-sub">Especializados em canhão · desde 2020</div>
+        <div class="stat-row"><span class="sl">Paciência</span><span class="sv hi">↑ Vel. de recarga</span></div>
+        <div class="stat-row"><span class="sl">Foco</span><span class="sv hi">↑ Alcance Tiro Focado</span></div>
+        <div class="stat-row"><span class="sl">Visão</span><span class="sv">↑ Ângulo de tiro</span></div>
+        <div class="stat-row"><span class="sl">Força</span><span class="sv">↑ Precisão</span></div>
+        <div class="stat-row"><span class="sl">Peso</span><span class="sv mid">Variável</span></div>
+        <div class="stat-row"><span class="sl">Ideal para</span><span class="sv hi">Caça a monstros</span></div>
+      </div>
+
+      <div class="card" data-tags="humano equilibrado geral">
+        <span class="badge b-gray">Geral</span>
+        <div class="card-title">Humanos</div>
+        <div class="card-sub">Vários locais</div>
+        <div class="stat-row"><span class="sl">Raça</span><span class="sv">Humano</span></div>
+        <div class="stat-row"><span class="sl">Peso</span><span class="sv mid">~250 LT</span></div>
+        <div class="stat-row"><span class="sl">Stats</span><span class="sv mid">Equilibrados</span></div>
+        <div class="stat-row"><span class="sl">Crescimento</span><span class="sv mid">Moderado</span></div>
+        <div class="stat-row"><span class="sl">Custo cabine</span><span class="sv">3 a 6</span></div>
+        <div class="stat-row"><span class="sl">Ideal para</span><span class="sv">Uso geral</span></div>
+      </div>
+
+      <div class="card" data-tags="realista anao curva angulo visao iliya velia">
+        <span class="badge b-purple">Curva & Ângulo</span>
+        <div class="card-title">Realista</div>
+        <div class="card-sub">Anão · Ilha Iliya / Velia</div>
+        <div class="stat-row"><span class="sl">Raça</span><span class="sv">Anão</span></div>
+        <div class="stat-row"><span class="sl">Peso (LT)</span><span class="sv lo">300 LT</span></div>
+        <div class="stat-row"><span class="sl">Cabine Desejada</span><span class="sv mid">10</span></div>
+        <div class="stat-row"><span class="sl">Apetite</span><span class="sv">100</span></div>
+        <div class="stat-row"><span class="sl">Destaque Nv.10</span><span class="sv hi">Sentido 10.0% / Visão 47.8%</span></div>
+        <div class="stat-row"><span class="sl">Paciência (Recarga)</span><span class="sv lo">0.0% — nenhuma</span></div>
+        <div class="stat-row"><span class="sl">Ideal para</span><span class="sv hi">Manobra / Ângulo de tiro</span></div>
+        <div style="margin-top:8px; font-size:11px; color:var(--text-dim); font-style:italic;">Dados por Xhys (Discord, 2020)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ VICE CAPITÃES ══ -->
+  <div id="page-vice" class="page">
+    <div class="page-header">
+      <div class="eyebrow">🧭 Slot Exclusivo</div>
+      <h2>Vice Capitães</h2>
+      <p>Tripulantes especiais das Carracas e do Panokseon. Habilitam navegação automática no Grande Oceano.</p>
+    </div>
+
+    <div style="background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.2); border-radius:8px; padding:12px 16px; font-size:13px; color:var(--text-dim); margin-bottom:20px; line-height:1.8;">
+      ⚓ Vice Capitães <strong style="color:var(--text-bright)">ocupam 1 slot de marinheiro</strong> e têm <strong style="color:var(--text-bright)">peso próprio</strong> (desconta da carga do navio) — mas <strong style="color:#6ecf9e">não ocupam cabine</strong> no navio. Podem ser contratados os 3, porém apenas <strong style="color:var(--text-bright)">1 ativo por vez</strong>. Não podem ser demitidos.
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card featured" style="border-color:rgba(201,168,76,0.5);">
+        <span class="badge b-gold">Vice Capitão</span>
+        <div class="card-title">Tranan</div>
+        <div class="card-sub">Slot de Vice Capitão</div>
+        <div class="stat-row"><span class="sl">Slot de marinheiro</span><span class="sv lo">Usa 1 slot</span></div>
+        <div class="stat-row"><span class="sl">Peso</span><span class="sv lo">Desconta da carga</span></div>
+        <div class="stat-row"><span class="sl">Cabine no navio</span><span class="sv hi">Não ocupa</span></div>
+        <div class="stat-row"><span class="sl">Pode demitir?</span><span class="sv lo">Não</span></div>
+        <div class="stat-row"><span class="sl">Navios</span><span class="sv">Carraca / Panokseon</span></div>
+        <div class="stat-row"><span class="sl">Cura (doença)</span><span class="sv">Elixir da Regeneração</span></div>
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(201,168,76,0.15);">
+          <div style="font-size:10px; color:var(--gold-dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:6px;">Habilidades</div>
+          <div style="font-size:12px; color:#6ecf9e; margin-bottom:5px;">🧭 Uso de bússola navegando <span style="color:var(--text-dim); font-size:11px;">(compartilhada)</span></div>
+          <div style="font-size:12px; color:var(--gold-light);">🔧 Auto reparo de durabilidade do navio <span style="color:var(--text-dim); font-size:11px;">(exclusiva)</span></div>
+        </div>
+      </div>
+
+      <div class="card featured" style="border-color:rgba(201,168,76,0.5);">
+        <span class="badge b-gold">Vice Capitão</span>
+        <div class="card-title">Phrawa</div>
+        <div class="card-sub">Slot de Vice Capitão</div>
+        <div class="stat-row"><span class="sl">Slot de marinheiro</span><span class="sv lo">Usa 1 slot</span></div>
+        <div class="stat-row"><span class="sl">Peso</span><span class="sv lo">Desconta da carga</span></div>
+        <div class="stat-row"><span class="sl">Cabine no navio</span><span class="sv hi">Não ocupa</span></div>
+        <div class="stat-row"><span class="sl">Apetite</span><span class="sv mid">150</span></div>
+        <div class="stat-row"><span class="sl">Suprimento de vida</span><span class="sv">250 (base)</span></div>
+        <div class="stat-row"><span class="sl">Pode demitir?</span><span class="sv lo">Não</span></div>
+        <div class="stat-row"><span class="sl">Navios</span><span class="sv">Carraca / Panokseon</span></div>
+        <div class="stat-row"><span class="sl">Cura (doença)</span><span class="sv">Elixir da Regeneração</span></div>
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(201,168,76,0.15);">
+          <div style="font-size:10px; color:var(--gold-dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:6px;">Habilidades</div>
+          <div style="font-size:12px; color:#6ecf9e; margin-bottom:5px;">🧭 Uso de bússola navegando <span style="color:var(--text-dim); font-size:11px;">(compartilhada)</span></div>
+          <div style="font-size:12px; color:var(--gold-light);">⚡ Partida Veloz um pouco mais aprimorada <span style="color:var(--text-dim); font-size:11px;">(exclusiva)</span></div>
+        </div>
+      </div>
+
+      <div class="card featured" style="border-color:rgba(201,168,76,0.5);">
+        <span class="badge b-gold">Vice Capitão</span>
+        <div class="card-title">Cleia</div>
+        <div class="card-sub">Slot de Vice Capitão</div>
+        <div class="stat-row"><span class="sl">Slot de marinheiro</span><span class="sv lo">Usa 1 slot</span></div>
+        <div class="stat-row"><span class="sl">Peso</span><span class="sv lo">Desconta da carga</span></div>
+        <div class="stat-row"><span class="sl">Cabine no navio</span><span class="sv hi">Não ocupa</span></div>
+        <div class="stat-row"><span class="sl">Apetite</span><span class="sv mid">150</span></div>
+        <div class="stat-row"><span class="sl">Suprimento de vida</span><span class="sv">250 (base)</span></div>
+        <div class="stat-row"><span class="sl">Pode demitir?</span><span class="sv lo">Não</span></div>
+        <div class="stat-row"><span class="sl">Navios</span><span class="sv">Carraca / Panokseon</span></div>
+        <div class="stat-row"><span class="sl">Cura (doença)</span><span class="sv">Elixir da Regeneração</span></div>
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(201,168,76,0.15);">
+          <div style="font-size:10px; color:var(--gold-dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:6px;">Habilidades</div>
+          <div style="font-size:12px; color:#6ecf9e; margin-bottom:5px;">🧭 Uso de bússola navegando <span style="color:var(--text-dim); font-size:11px;">(compartilhada)</span></div>
+          <div style="font-size:12px; color:var(--gold-light);">🛒 Poder de Barganha em permuta -10% <span style="color:var(--text-dim); font-size:11px;">(exclusiva)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <p class="sec-label">Resumo do sistema</p>
+    <div class="grid grid-2">
+      <div class="attr-card">
+        <h4>Funcionamento</h4>
+        <div class="attr-row"><span>Pode contratar todos os 3?</span><span>Sim</span></div>
+        <div class="attr-row"><span>Ativos simultâneos</span><span>Apenas 1</span></div>
+        <div class="attr-row"><span>Ocupa cabine do navio?</span><span style="color:#6ecf9e">Não</span></div>
+        <div class="attr-row"><span>Usa slot de marinheiro?</span><span style="color:#e07060">Sim — 1 slot</span></div>
+        <div class="attr-row"><span>Tem peso próprio?</span><span style="color:#e07060">Sim</span></div>
+        <div class="attr-row"><span>Pode demitir?</span><span style="color:#e07060">Não</span></div>
+      </div>
+      <div class="attr-card">
+        <h4>Navios compatíveis</h4>
+        <div class="attr-row"><span>Carraca Bravura</span><span>✓</span></div>
+        <div class="attr-row"><span>Carraca Emergência</span><span>✓</span></div>
+        <div class="attr-row"><span>Carraca Gradual</span><span>✓</span></div>
+        <div class="attr-row"><span>Carraca Equilíbrio</span><span>✓</span></div>
+        <div class="attr-row"><span>Panokseon</span><span>✓</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ EVOLUÇÃO ══ -->
+  <div id="page-evolucao" class="page">
+    <div class="page-header">
+      <div class="eyebrow">📈 Progressão</div>
+      <h2>Evolução & Habilidades</h2>
+      <p>Tabela de níveis, habilidades desbloqueadas e como ganhar experiência.</p>
+    </div>
+
+    <table class="evol-table">
+      <thead>
+        <tr>
+          <th>Nível</th>
+          <th>Habilidade desbloqueada</th>
+          <th>Efeito</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge b-gray">Nv. 1</span></td><td>Habilidade inicial</td><td>1 atributo base aleatório: Resistência, Esperteza, Consciência ou Força</td></tr>
+        <tr><td><span class="badge b-gray">Nv. 5</span></td><td>+1 habilidade</td><td>Nova habilidade aleatória desbloqueada</td></tr>
+        <tr><td><span class="badge b-gray">Nv. 10</span></td><td>+1 habilidade</td><td>Nova habilidade aleatória</td></tr>
+        <tr><td><span class="badge b-gray">Nv. 15</span></td><td>+1 habilidade</td><td>Nova habilidade aleatória</td></tr>
+        <tr><td><span class="badge b-gold">Nv. 20</span></td><td>+1 habilidade</td><td>Nova habilidade aleatória</td></tr>
+        <tr><td><span class="badge b-gold">Nv. 25</span></td><td>+1 habilidade</td><td>Nova habilidade aleatória</td></tr>
+        <tr><td><span class="badge b-green">Nv. 30 — Máx.</span></td><td>+1 habilidade final</td><td>7ª habilidade. Se artesão ou sem promoção restante: pode rerollar habilidades ao atingir 50% XP</td></tr>
+      </tbody>
+    </table>
+
+    <hr class="divider">
+    <p class="sec-label">Habilidades de nível máximo</p>
+    <div class="grid grid-2">
+      <div class="card">
+        <span class="badge b-blue">Habilidades de Navegação</span>
+        <div style="margin-top:8px; line-height:2.2;">
+          <span class="pill">Marinheiro Experiente</span> <span style="font-size:12px;color:var(--text-dim)">↓ efeito de correntezas marinhas</span><br>
+          <span class="pill">Filho do Vento</span> <span style="font-size:12px;color:var(--text-dim)">↓ efeito de tempestades no mar</span><br>
+          <span class="pill">Abstinência</span> <span style="font-size:12px;color:var(--text-dim)">↓ consumo de rações por ciclo</span><br>
+          <span class="pill">Soldado Nato</span> <span style="font-size:12px;color:var(--text-dim)">↑ resistência geral do navio</span>
+        </div>
+      </div>
+      <div class="card">
+        <span class="badge b-red">Habilidades de Canhão</span>
+        <div style="margin-top:8px; line-height:2.2;">
+          <span class="pill">Paciência</span> <span style="font-size:12px;color:var(--text-dim)">↑ velocidade de recarga dos canhões</span><br>
+          <span class="pill">Foco</span> <span style="font-size:12px;color:var(--text-dim)">↑ alcance do Tiro Focado</span><br>
+          <span class="pill">Visão</span> <span style="font-size:12px;color:var(--text-dim)">↑ ângulo de disparo dos canhões</span><br>
+          <span class="pill">Força Bélica</span> <span style="font-size:12px;color:var(--text-dim)">↑ precisão dos canhões</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <p class="sec-label">Como ganhar XP de marinheiro</p>
+    <div class="grid grid-3">
+      <div class="attr-card"><h4>Combate</h4>
+        <div class="attr-row"><span>Matar monstros marinhos</span><span style="color:#6ecf9e">✓✓</span></div>
+        <div class="attr-row"><span>Ocean Stalkers</span><span style="color:#6ecf9e">Bom</span></div>
+        <div class="attr-row"><span>Navios Goldmont</span><span style="color:#6ecf9e">Bom</span></div>
+      </div>
+      <div class="attr-card"><h4>Escambo</h4>
+        <div class="attr-row"><span>Escambo regular</span><span style="color:#6ecf9e">✓</span></div>
+        <div class="attr-row"><span>Escambo especial</span><span style="color:#6ecf9e">✓✓</span></div>
+      </div>
+      <div class="attr-card"><h4>Bônus de XP</h4>
+        <div class="attr-row"><span>11+ marinheiros a bordo</span><span style="color:var(--gold-light)">400% XP</span></div>
+        <div class="attr-row"><span>Dividido entre todos</span><span style="color:var(--text-dim)">~13%/cada</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ MANUTENÇÃO ══ -->
+  <div id="page-manutencao" class="page">
+    <div class="page-header">
+      <div class="eyebrow">🍞 Cuidados</div>
+      <h2>Manutenção da Tripulação</h2>
+      <p>Como manter seus marinheiros saudáveis e produtivos.</p>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <span class="badge b-green">Alimentação regular</span>
+        <div class="card-title" style="margin-bottom:10px;">Pão de Uva Passa</div>
+        <div class="stat-row"><span class="sl">Para que serve</span><span class="sv">Recuperar condição normal</span></div>
+        <div class="stat-row"><span class="sl">Onde comprar</span><span class="sv">Islin Bartali em Velia</span></div>
+        <div class="stat-row"><span class="sl">Também em</span><span class="sv">Gerentes de Ancoradouro</span></div>
+        <div class="stat-row"><span class="sl">Mercado Central</span><span class="sv hi">Sim</span></div>
+      </div>
+      <div class="card">
+        <span class="badge b-red">Doença (condição = 0)</span>
+        <div class="card-title" style="margin-bottom:10px;">Elixir da Regeneração</div>
+        <div class="stat-row"><span class="sl">Obtido por</span><span class="sv">Alquimia simples (tecla L)</span></div>
+        <div class="stat-row"><span class="sl">Ingrediente 1</span><span class="sv">Essência de Mandrágora x1</span></div>
+        <div class="stat-row"><span class="sl">Ingrediente 2</span><span class="sv">Essência da Natureza x1</span></div>
+        <div class="stat-row"><span class="sl">Ingrediente 3</span><span class="sv">Óleo da Regeneração x1</span></div>
+        <div class="stat-row"><span class="sl">Ingrediente 4</span><span class="sv">Sangue de Troll x2</span></div>
+        <div class="stat-row"><span class="sl">Ingrediente 5</span><span class="sv">Uva x4</span></div>
+      </div>
+      <div class="card">
+        <span class="badge b-blue">Sopa Grossa (Chowder)</span>
+        <div class="card-title" style="margin-bottom:10px;">Recuperação de condição</div>
+        <div class="stat-row"><span class="sl">Requer</span><span class="sv">Culinária nível Profissional+</span></div>
+        <div class="stat-row"><span class="sl">Carne de Ostra Seca</span><span class="sv">x1 (ou Marisco Seco x5)</span></div>
+        <div class="stat-row"><span class="sl">Pimenta</span><span class="sv">x2</span></div>
+        <div class="stat-row"><span class="sl">Carne de Porco</span><span class="sv">x2</span></div>
+        <div class="stat-row"><span class="sl">Leite</span><span class="sv">x1</span></div>
+        <div class="stat-row"><span class="sl">Pão de Teff</span><span class="sv">x1</span></div>
+        <div class="stat-row"><span class="sl">Quest diária</span><span class="sv">Entregar 3x a Proix em Velia</span></div>
+      </div>
+      <div class="card">
+        <span class="badge b-red">Quando a condição zera</span>
+        <div class="card-title" style="margin-bottom:10px;">Causas e consequências</div>
+        <div class="stat-row"><span class="sl">Causa 1</span><span class="sv lo">Rações acabarem no mar</span></div>
+        <div class="stat-row"><span class="sl">Causa 2</span><span class="sv lo">Navio destruído</span></div>
+        <div class="stat-row"><span class="sl">Causa 3</span><span class="sv lo">Coleta remota do navio</span></div>
+        <div class="stat-row"><span class="sl">Efeito</span><span class="sv lo">Marinheiro fica doente</span></div>
+        <div class="stat-row"><span class="sl">Consequência</span><span class="sv lo">Stats não são aplicados</span></div>
+        <div class="stat-row"><span class="sl">Cura</span><span class="sv hi">Elixir da Regeneração</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ ATRIBUTOS ══ -->
+  <div id="page-atributos" class="page">
+    <div class="page-header">
+      <div class="eyebrow">📊 Referência</div>
+      <h2>Atributos × Efeitos no Navio</h2>
+      <p>Cada atributo do marinheiro se traduz diretamente em um stat do navio.</p>
+    </div>
+    <div class="attr-map">
+      <div class="attr-card">
+        <h4>🗺 Atributos de Movimento</h4>
+        <div class="attr-row"><span>Resistência</span><span>→ Velocidade</span></div>
+        <div class="attr-row"><span>Esperteza</span><span>→ Aceleração</span></div>
+        <div class="attr-row"><span>Consciência</span><span>→ Curva</span></div>
+        <div class="attr-row"><span>Força</span><span>→ Freio</span></div>
+      </div>
+      <div class="attr-card">
+        <h4>🎯 Atributos de Canhão</h4>
+        <div class="attr-row"><span>Paciência</span><span>→ Vel. de recarga</span></div>
+        <div class="attr-row"><span>Foco</span><span>→ Alcance Tiro Focado</span></div>
+        <div class="attr-row"><span>Visão</span><span>→ Ângulo de tiro</span></div>
+        <div class="attr-row"><span>Força (canhão)</span><span>→ Precisão</span></div>
+      </div>
+      <div class="attr-card">
+        <h4>⚖ Atributos Gerais</h4>
+        <div class="attr-row"><span>Apetite</span><span>Consumo de rações</span></div>
+        <div class="attr-row"><span>Custo cabine</span><span>Espaço ocupado</span></div>
+        <div class="attr-row"><span>Peso</span><span>Reduz carga disponível</span></div>
+        <div class="attr-row"><span>Condição</span><span>Saúde do marinheiro</span></div>
+      </div>
+      <div class="attr-card">
+        <h4>🏋 Peso por Raça</h4>
+        <div class="attr-row"><span>Goblin</span><span style="color:#6ecf9e">~150 LT (leve)</span></div>
+        <div class="attr-row"><span>Humano</span><span>~250 LT</span></div>
+        <div class="attr-row"><span>Anão</span><span>~300 LT</span></div>
+        <div class="attr-row"><span>Gigante</span><span style="color:#e07060">~500 LT (pesado)</span></div>
+      </div>
+    </div>
+    <div class="tip-box blue" style="margin-top:20px;">
+      <strong>Dica de composição:</strong> Para escambo, priorize marinheiros com alta Resistência (→ Velocidade) e menor Peso para preservar a capacidade de carga. Para combate, adicione marinheiros com Paciência (→ recarga de canhão) e Foco (→ Tiro Focado).
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ SLOTS ══ -->
+  <div id="page-slots" class="page">
+    <div class="page-header">
+      <div class="eyebrow">🗂 Slots</div>
+      <h2>Slots de Marinheiro</h2>
+      <p>Como aumentar sua capacidade de tripulação e como funciona o sistema de cabines.</p>
+    </div>
+
+    <p class="sec-label">Como obter mais slots</p>
+    <div class="slot-grid">
+      <div class="slot-item"><strong>5 Juramentos de Marinheiro</strong>Recompensa da missão A Grande Expedição (Olho de Oquilla)</div>
+      <div class="slot-item"><strong>3 Juramentos</strong>Missão "Presente de Chulong" em Vila Nampo Moodle</div>
+      <div class="slot-item"><strong>Medalha do Capitão</strong>Loja de Pérolas — 500 pérolas cada, máx. 14 compras</div>
+      <div class="slot-item"><strong>7.000 Lealdades</strong>Também concede 1 slot de marinheiro</div>
+    </div>
+
+    <div class="tip-box" style="margin: 16px 0;">
+      <strong>Máximo total:</strong> 50 slots de marinheiro por conta (via Pérolas). Slots via Juramentos e Lealdades são permanentes e gratuitos.
+    </div>
+
+    <hr class="divider">
+    <p class="sec-label">Cabines por navio</p>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-title">Carracas de Epheria</div>
+        <div class="stat-row"><span class="sl">Cabines base</span><span class="sv">20</span></div>
+        <div class="stat-row"><span class="sl">Com upgrades</span><span class="sv hi">100</span></div>
+        <div class="stat-row"><span class="sl">Vice Capitão</span><span class="sv hi">Slot extra (não conta)</span></div>
+        <div class="stat-row"><span class="sl">Custo por marinheiro</span><span class="sv mid">3 a 10 cabines</span></div>
+      </div>
+      <div class="card featured-blue">
+        <div class="card-title">Panokseon</div>
+        <div class="stat-row"><span class="sl">Cabines base</span><span class="sv hi">150</span></div>
+        <div class="stat-row"><span class="sl">Vs. Carraca</span><span class="sv hi">50% mais espaço</span></div>
+        <div class="stat-row"><span class="sl">Vice Capitão</span><span class="sv hi">Slot extra (não conta)</span></div>
+        <div class="stat-row"><span class="sl">Custo por marinheiro</span><span class="sv mid">3 a 10 cabines</span></div>
+      </div>
+    </div>
+    <div class="tip-box green" style="margin-top:12px;">
+      <strong>Atenção ao peso:</strong> O peso dos marinheiros desconta da capacidade de carga do navio. Com 15 Gigantes a bordo do Panokseon, o limite disponível cai para ~9.500 LT. Prefira Goblins para escambo!
+    </div>
+  </div>
+  <!-- ══════════════════════════════ AGRADECIMENTOS ══ -->
+  <div id="page-agradecimentos" class="page">
+    <div class="page-header">
+      <div class="eyebrow">🏅 Comunidade</div>
+      <h2>Agradecimentos</h2>
+      <p>Aos navegadores que contribuíram com informações, correções e conhecimento para este guia.</p>
+    </div>
+
+    <div style="text-align:center; padding: 40px 20px; border: 1px solid rgba(201,168,76,0.2); border-radius:10px; background: linear-gradient(135deg, rgba(18,56,79,0.4), rgba(13,42,58,0.6)); margin-bottom: 32px;">
+      <div style="font-size:48px; margin-bottom:16px;">⚓</div>
+      <div style="font-family:'Cinzel',serif; font-size:16px; color:var(--gold-light); margin-bottom:12px;">Tripulação do Conhecimento</div>
+      <div style="font-size:15px; color:var(--text-dim); font-style:italic; max-width:440px; margin:0 auto; line-height:1.8;">
+        Jogadores que contribuíram com informações, correções e conhecimento para tornar este guia mais completo.
+      </div>
+    </div>
+
+    <p class="sec-label">Contribuidores</p>
+    <div class="grid grid-3">
+
+      <div class="card featured" style="border-color:rgba(201,168,76,0.5);">
+        <span class="badge b-gold">Contribuidor</span>
+        <div class="card-title" style="font-family:'Cinzel',serif;">Xhys</div>
+        <div class="card-sub">Servidor SA</div>
+        <div class="stat-row"><span class="sl">Contribuição</span><span class="sv hi">Compartilhou material valioso</span></div>
+        <div class="stat-row"><span class="sl">Reputação</span><span class="sv hi">O melhor navegador do SA</span></div>
+        <div class="stat-row"><span class="sl">Título oficial</span><span class="sv mid">Brabo</span></div>
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(201,168,76,0.15); font-size:12px; color:var(--text-dim); line-height:1.7;">
+          No passado, era presença constante na <span style="color:var(--gold-light); font-style:italic;">Taverna Marlim-Azul Dançando na Bebida</span> — ajudando marinheiros, tirando dúvidas e guiando novatos pelos mares do SA.
+        </div>
+      </div>
+
+      <div class="card featured" style="border-color:rgba(201,168,76,0.5);">
+        <span class="badge b-gold">Contribuidor</span>
+        <div class="card-title" style="font-family:'Cinzel',serif;">Laddo</div>
+        <div class="card-sub">Servidor SA</div>
+        <div class="stat-row"><span class="sl">Contribuição</span><span class="sv hi">Compartilhou material valioso</span></div>
+        <div class="stat-row"><span class="sl">Reputação</span><span class="sv hi">Líder da guild marítima mais forte do SA</span></div>
+        <div class="stat-row"><span class="sl">Título oficial</span><span class="sv mid">De qual lado</span></div>
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(201,168,76,0.15); font-size:12px; color:var(--text-dim); line-height:1.7;">
+          Presença constante na <span style="color:var(--gold-light); font-style:italic;">Taverna Marlim-Azul Dançando na Bebida</span>, ajudando marinheiros no chat, tirando dúvidas, fazendo as missões de Okilua e levando novatos para que consigam fabricar suas próprias carracas.
+        </div>
+        <div style="margin-top:10px;">
+          <a href="https://www.twitch.tv/o_laddo" target="_blank" style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(100,65,165,0.15); border:1px solid rgba(100,65,165,0.35); border-radius:8px; text-decoration:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#b49fff" xmlns="http://www.w3.org/2000/svg"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+            <div>
+              <div style="font-size:11px; color:rgba(180,150,255,0.7);">Twitch</div>
+              <div style="font-size:12px; color:#b49fff; font-weight:500;">twitch.tv/o_laddo</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="card featured" style="border-color:rgba(201,168,76,0.5);">
+        <span class="badge b-gold">Contribuidor</span>
+        <div class="card-title" style="font-family:'Cinzel',serif;">LucianoPessoa75</div>
+        <div class="card-sub">Servidor SA</div>
+        <div class="stat-row"><span class="sl">Contribuição</span><span class="sv hi">Informações sobre o Contramestre Jock 🦜</span></div>
+        <div class="stat-row"><span class="sl">Reputação</span><span class="sv hi">Eu faço permuta pelo esporte, não é por dinheiro</span></div>
+        <div class="stat-row"><span class="sl">Título oficial</span><span class="sv mid">Permuteiro Safado</span></div>
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(201,168,76,0.15); font-size:12px; color:var(--text-dim); font-style:italic; line-height:1.7;">
+          Lives diárias permutando e rindo dos outros.
+        </div>
+        <div style="margin-top:10px;">
+          <a href="https://www.twitch.tv/lucianopessoa75" target="_blank" style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(100,65,165,0.15); border:1px solid rgba(100,65,165,0.35); border-radius:8px; text-decoration:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#b49fff" xmlns="http://www.w3.org/2000/svg"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+            <div>
+              <div style="font-size:11px; color:rgba(180,150,255,0.7);">Twitch</div>
+              <div style="font-size:12px; color:#b49fff; font-weight:500;">twitch.tv/lucianopessoa75</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+    </div>
+    <p class="sec-label">Sobre este guia</p>
+    <div class="card" style="max-width:600px;">
+      <div class="stat-row"><span class="sl">Idealizado e criado por</span><span class="sv" style="font-family:'Cinzel',serif; color:var(--gold-light);">Elezar</span></div>
+      <div class="stat-row"><span class="sl">Servidor</span><span class="sv">SA (South America)</span></div>
+      <div class="stat-row"><span class="sl">Conteúdo</span><span class="sv">Navios, Tripulação, Equipamentos</span></div>
+      <div class="stat-row"><span class="sl">Status</span><span class="sv hi">Em constante atualização</span></div>
+    </div>
+
+    <div class="tip-box" style="margin-top:20px; max-width:600px;">
+      <strong>Quer contribuir?</strong> Se você tem informações, correções ou dados sobre navios e marinheiros que podem enriquecer este guia, entre em contato com <span style="color:var(--gold-light); font-family:'Cinzel',serif;">Elezar</span> no jogo!
+    </div>
+
+    <hr class="divider">
+    <p class="sec-label">Sobre o autor</p>
+    <div class="card" style="max-width:600px;">
+      <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid rgba(201,168,76,0.15);">
+        <img src="data:image/jpeg;base64,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" style="width:52px; height:52px; border-radius:50%; border:2px solid rgba(201,168,76,0.4); object-fit:cover; flex-shrink:0;">
+        <div>
+          <div style="font-family:'Cinzel',serif; font-size:16px; font-weight:700; color:var(--gold-light);">Elezar</div>
+          <div style="font-size:12px; color:var(--text-dim); margin-top:2px;">Servidor SA</div>
+        </div>
+      </div>
+      <div style="font-size:13px; color:var(--text-dim); line-height:1.8; margin-bottom:14px; font-style:italic;">
+        Jogador de BDO, criador deste guia e produtor de conteúdo. Atualmente focado nos mares do servidor SA — e em documentar tudo que aprende pelo caminho.
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <a href="https://www.twitch.tv/dorggortv" target="_blank" style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:rgba(100,65,165,0.15); border:1px solid rgba(100,65,165,0.35); border-radius:8px; text-decoration:none;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#b49fff" xmlns="http://www.w3.org/2000/svg"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+          <div>
+            <div style="font-size:12px; color:rgba(180,150,255,0.7); margin-bottom:1px;">Twitch</div>
+            <div style="font-size:13px; color:#b49fff; font-weight:500;">twitch.tv/dorggortv</div>
+          </div>
+        </a>
+        <a href="https://www.youtube.com/@dorggor8947/videos" target="_blank" style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:rgba(180,30,30,0.15); border:1px solid rgba(180,30,30,0.35); border-radius:8px; text-decoration:none;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff9090" xmlns="http://www.w3.org/2000/svg"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+          <div>
+            <div style="font-size:12px; color:rgba(255,120,120,0.7); margin-bottom:1px;">YouTube</div>
+            <div style="font-size:13px; color:#ff9090; font-weight:500;">youtube.com/@dorggor8947</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function navigate(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    event.currentTarget.classList.add('active');
+    document.querySelector('.sidebar').classList.remove('open');
+    window.scrollTo(0, 0);
+  }
+
+  function filterSailors(q) {
+    const term = q.toLowerCase();
+    document.querySelectorAll('#sailor-cards .card').forEach(c => {
+      const tags = c.dataset.tags || '';
+      const text = c.innerText.toLowerCase();
+      c.style.display = (tags.includes(term) || text.includes(term)) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>
